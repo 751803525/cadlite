@@ -26,7 +26,7 @@ export async function promptOptions(): Promise<OptionsResult> {
       name: 'targetFaces',
       message: '目标面数（0=不限制）:',
       default: 5000,
-      validate: (input: number) => (input >= 0 ? true : '请输入非负整数'),
+      validate: (input: any) => (input >= 0 ? true : '请输入非负整数'),
     },
   ]);
 
@@ -35,7 +35,7 @@ export async function promptOptions(): Promise<OptionsResult> {
       type: 'confirm',
       name: 'keepTemp',
       message: '保留临时文件（调试用）?',
-      default: false,
+      default: true,
     },
   ]);
 
