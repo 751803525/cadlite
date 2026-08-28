@@ -2,7 +2,7 @@
 
 > Industrial CAD to Web 3D lightweight pipeline
 
-[![npm version](https://img.shields.io/npm/v/cadlite)](https://www.npmjs.com/package/cadlite)
+<!-- [![npm version](https://img.shields.io/npm/v/cadlite)](https://www.npmjs.com/package/cadlite) -->
 
 ## ✨ 功能
 
@@ -15,4 +15,4 @@
 ## 📦 安装
 
 ```bash
-npm install -g cadlite
+# npm install -g cadlite
