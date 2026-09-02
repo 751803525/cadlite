@@ -7,6 +7,7 @@ import { step5Dedup } from '../steps/step5-dedup.js';
 import { step6Merge } from '../steps/step6-merge.js';
 import { step7Cleanup } from '../steps/step7-cleanup.js';
 import { logger } from '../../cli/logger.js';
+import { tempDir } from '../../utils/temp-path.js';
 
 const STEP_MAP: Record<number, { name: string; fn: (ctx: PipelineContext) => Promise<void> }> = {
   3: { name: '转换零件 → GLB', fn: step3Convert },
@@ -18,12 +19,13 @@ const STEP_MAP: Record<number, { name: string; fn: (ctx: PipelineContext) => Pro
 export async function runPipeline(config: PipelineConfig): Promise<PipelineContext> {
   const context: PipelineContext = {
     config,
-    tempDir: `${config.outputDir}/.cadlite-temp`,
+    tempDir: tempDir,
     hierarchy: null,
     parts: [],
     optimizedParts: [],
     dedupMap: null,
     mergedPath: '',
+    keepTemp: config.keepTemp ?? true,
   };
 
   // ===== 步骤1：文件选择 =====

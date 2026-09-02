@@ -15,6 +15,7 @@ export interface PipelineContext {
   optimizedParts: PartInfo[];
   dedupMap: DedupMap | null;
   mergedPath: string;
+  keepTemp: boolean;
 }
 
 export interface AssemblyHierarchy {

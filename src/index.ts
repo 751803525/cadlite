@@ -1,17 +1,20 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
-import { readFileSync } from 'fs';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { processCommand } from './cli/commands/process.js';
 import { initCommand } from './cli/commands/init.js';
 import { logger } from './cli/logger.js';
+import { tempDir } from './utils/temp-path.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'));
+const pkg = JSON.parse(fs.readFileSync(join(__dirname, '../package.json'), 'utf-8'));
 
 program.name('cadlite').description(pkg.description).version(pkg.version);
+
+process.on;
 
 program
   .command('process')
@@ -22,12 +25,17 @@ program
   .option('-m, --mode <mode>', '输出模式: merged | split | both（需要包含步骤6）')
   .option('-f, --target-faces <number>', '目标面数（需要包含步骤4）')
   .option('--keep-temp', '保留临时文件（调试用）')
-  .option('--no-interactive', '禁用交互式提示')
   .action(async (options) => {
     try {
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdtempSync(tempDir);
+      }
+      logger.info(tempDir);
       await processCommand(options);
+      // fs.rmSync(tempDir, { recursive: true, force: true });
     } catch (error) {
       logger.error(error instanceof Error ? error.message : String(error));
+      // fs.rmSync(tempDir, { recursive: true, force: true });
       process.exit(1);
     }
   });
