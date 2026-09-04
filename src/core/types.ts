@@ -10,10 +10,6 @@ export interface PipelineConfig {
 export interface PipelineContext {
   config: PipelineConfig;
   tempDir: string;
-  hierarchy: AssemblyHierarchy | null;
-  parts: PartInfo[];
-  optimizedParts: PartInfo[];
-  dedupMap: DedupMap | null;
   mergedPath: string;
   keepTemp: boolean;
 }

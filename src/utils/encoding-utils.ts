@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import chardet from 'chardet';
 import iconv from 'iconv-lite';
+import { logger } from '../cli/logger.js';
 
 /**
  * 编码层级映射（子集 → 超集）
@@ -163,7 +164,7 @@ export async function convertFileEncoding(
   const forceOverwrite = options.forceOverwrite !== false;
   const defaultEncoding = options.defaultEncoding || 'gbk'; // 默认 gbk
 
-  if (verbose) console.log(`[encoding] 开始处理文件: ${inputPath}`);
+  if (verbose) logger.info(`[encoding] 开始处理文件: ${inputPath}`);
   if (!fs.existsSync(inputPath)) throw new Error(`输入文件不存在: ${inputPath}`);
 
   // -------- 确定输出路径 --------
@@ -172,7 +173,7 @@ export async function convertFileEncoding(
     if (!fs.existsSync(options.outputDir)) fs.mkdirSync(options.outputDir, { recursive: true });
     const baseName = options.fileName || path.basename(inputPath);
     finalOutputPath = path.join(options.outputDir, baseName);
-    if (verbose) console.log(`[encoding] 输出目录: ${options.outputDir}, 文件名: ${baseName}`);
+    if (verbose) logger.info(`[encoding] 输出目录: ${options.outputDir}, 文件名: ${baseName}`);
   } else {
     if (!outputPath) throw new Error('必须指定 outputPath 或 options.outputDir');
     finalOutputPath = outputPath;
@@ -185,35 +186,35 @@ export async function convertFileEncoding(
   }
 
   if (verbose) {
-    console.log(`[encoding] 最终输出路径: ${finalOutputPath}`);
-    console.log(`[encoding] 目标编码: ${targetEncoding}`);
+    logger.info(`[encoding] 最终输出路径: ${finalOutputPath}`);
+    logger.info(`[encoding] 目标编码: ${targetEncoding}`);
   }
 
   // -------- 确定源编码 --------
   let sourceEncoding = options.sourceEncoding;
   if (!sourceEncoding) {
     const sampleSize = options.sampleSize ?? 128 * 1024;
-    if (verbose) console.log(`[encoding] 正在智能检测源文件编码...`);
+    if (verbose) logger.info(`[encoding] 正在智能检测源文件编码...`);
     const detected = detectFileEncodingSmart(inputPath, sampleSize, defaultEncoding);
     sourceEncoding = detected;
-    if (verbose) console.log(`[encoding] ✅ 检测到源编码: ${sourceEncoding}`);
+    if (verbose) logger.info(`[encoding] ✅ 检测到源编码: ${sourceEncoding}`);
   } else {
-    if (verbose) console.log(`[encoding] 手动指定源编码: ${sourceEncoding}`);
+    if (verbose) logger.info(`[encoding] 手动指定源编码: ${sourceEncoding}`);
   }
 
   const srcEnc = sourceEncoding.toLowerCase();
   const tgtEnc = targetEncoding.toLowerCase();
 
-  if (verbose) console.log(`[encoding] 源: ${srcEnc}, 目标: ${tgtEnc}`);
+  if (verbose) logger.info(`[encoding] 源: ${srcEnc}, 目标: ${tgtEnc}`);
 
   if (srcEnc === tgtEnc) {
-    if (verbose) console.log(`[encoding] 编码相同，直接复制`);
+    if (verbose) logger.info(`[encoding] 编码相同，直接复制`);
     await copyFileStream(inputPath, finalOutputPath);
-    if (verbose) console.log(`[encoding] ✅ 复制完成`);
+    if (verbose) logger.info(`[encoding] ✅ 复制完成`);
     return;
   }
 
-  if (verbose) console.log(`[encoding] 开始流式转换...`);
+  if (verbose) logger.info(`[encoding] 开始流式转换...`);
   const readStream = fs.createReadStream(inputPath);
   const writeStream = fs.createWriteStream(finalOutputPath);
   const decodeStream = iconv.decodeStream(srcEnc);
@@ -223,7 +224,7 @@ export async function convertFileEncoding(
 
   return new Promise((resolve, reject) => {
     writeStream.on('finish', () => {
-      if (verbose) console.log(`[encoding] ✅ 转码完成`);
+      if (verbose) logger.info(`[encoding] ✅ 转码完成`);
       resolve();
     });
     writeStream.on('error', reject);

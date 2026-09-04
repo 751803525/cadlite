@@ -48,12 +48,12 @@ export async function processCommand(options: ProcessOptions): Promise<void> {
 
   if (options.steps) {
     // 命令行明确指定了步骤
-    steps = options.steps.split(',').map(Number);
+    steps = options.steps.split(',').map(Number) || [];
     // 若命令行未指定 mode/targetFaces/keepTemp，则保留上述默认值
   } else {
     // 未指定步骤 → 进入交互选择（同时获取模式、面数、是否保留临时文件）
     const selection = await promptStepsSelect();
-    steps = selection.selectedSteps;
+    steps = selection.selectedSteps || [];
     mode = selection.mode;
     targetFaces = selection.targetFaces;
     keepTemp = selection.keepTemp;
@@ -81,6 +81,5 @@ export async function processCommand(options: ProcessOptions): Promise<void> {
     targetFaces,
     keepTemp,
   };
-
   await runPipeline(config);
 }

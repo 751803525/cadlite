@@ -6,7 +6,7 @@ import fs from 'fs/promises';
 /**
  * 步骤1：交互式选择输入文件和输出目录
  */
-export async function step1Select(context: PipelineContext): Promise<void> {
+export async function selectStep(context: PipelineContext): Promise<void> {
   const { config } = context;
 
   // 如果已通过命令行参数指定了输入文件，跳过交互

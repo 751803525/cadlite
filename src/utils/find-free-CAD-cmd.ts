@@ -1,32 +1,17 @@
-import type { PipelineContext } from '../types.js';
-import { logger } from '../../cli/logger.js';
-import fs from 'fs/promises';
 import path from 'path';
-import { exec, spawn } from 'child_process';
-import { fileURLToPath } from 'url';
-import { convertFileEncoding } from '../../utils/encoding-utils.js';
+import { logger } from '../cli/logger.js';
+import { fileExists } from './file.js';
 import { promisify } from 'util';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { exec } from 'child_process';
+import fs from 'fs/promises';
 
 const execAsync = promisify(exec);
-
-// 辅助：检查文件是否存在
-async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 /**
  * 寻找可用于执行 Python 脚本的 FreeCAD 解释器路径
  * 优先返回 FreeCAD 附带的 bin/python.exe，次选 freecadcmd.exe
  */
-async function findFreeCADCmd(): Promise<{ exe: string; isPython: boolean }> {
+export async function findFreeCADCmd(): Promise<{ exe: string; isPython: boolean }> {
   // 1. 优先使用自定义环境变量
   if (process.env.FREECAD_CMD) {
     const customPath = process.env.FREECAD_CMD;
@@ -129,70 +114,4 @@ async function findFreeCADCmd(): Promise<{ exe: string; isPython: boolean }> {
       '  1. 设置环境变量 FREECAD_CMD 指向 bin/python.exe 或 freecadcmd.exe\n' +
       '  2. 将 FreeCAD 的 bin 目录添加到系统 PATH 中'
   );
-}
-
-async function freecadcmd(
-  exe: string,
-  py: string,
-  inputPath: string,
-  outputDir: string
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    // 2. 将 -c 参数传入，确保以纯命令行交互模式启动 Python 脚本
-    const args = [py, inputPath, outputDir];
-
-    logger.info(`执行命令: ${exe} ${args.join(' ')}`);
-
-    // 3. 不使用 shell: true，Node.js 会自动处理参数中带有空格的情况
-    const child = spawn(exe, args, {
-      shell: false,
-      env: {
-        ...process.env,
-        // 强制 Python 标准输出为 UTF-8，防止 Windows 控制台打印中文零件名乱码
-        PYTHONIOENCODING: 'utf-8',
-      },
-    });
-
-    // 4. 解决 Windows CMD 下可能出现的 GBK/UTF8 跨进程编码截断
-    child.stdout.on('data', (data: Buffer) => {
-      const line = data.toString('utf-8').trim();
-      if (line) logger.info(`[FreeCAD]: ${line}`);
-    });
-
-    child.stderr.on('data', (data: Buffer) => {
-      const line = data.toString('utf-8').trim();
-      // 忽略部分 freecad 启动时吐出的非致命 console 警告
-      if (line) logger.warn(`[FreeCAD Error]: ${line}`);
-    });
-
-    child.on('close', (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`freecadcmd 进程异常退出，退出码: ${code}`));
-      }
-    });
-
-    child.on('error', (err) => {
-      logger.error(`无法启动 freecadcmd 进程，请检查路径是否存在: ${exe}`);
-      reject(err);
-    });
-  });
-}
-/**
- * 步骤2：解析 STEP 文件，输出 hierarchy.json 和零件文件（STL 中间格式，随后转为 GLB）
- */
-export async function step2Parse(context: PipelineContext): Promise<void> {
-  const { config, tempDir } = context;
-  const { inputPath } = config;
-  logger.info(`解析: ${inputPath}`);
-  const ext = path.extname(inputPath).toLocaleLowerCase();
-  const encodingPath = path.join(tempDir, 'encoding', `temp${ext}`);
-  await convertFileEncoding(inputPath, path.resolve(tempDir, encodingPath));
-
-  const splitOutputDir = path.join(tempDir, 'split');
-  const pyPath = path.join(__dirname, '../../scripts/step-split.py');
-  const { exe } = await findFreeCADCmd();
-  await freecadcmd(exe, pyPath, encodingPath, splitOutputDir);
-  logger.info('拆分完成');
 }

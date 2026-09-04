@@ -30,14 +30,17 @@
     "chalk": "^5.3.0",
     "chardet": "^2.2.0",
     "commander": "^12.1.0",
+    "fs-extra": "^11.4.0",
     "iconv-lite": "^0.7.3",
     "inquirer": "^10.2.2",
     "opencascade-convert": "^0.2.0",
+    "opencascade.js": "^1.1.1",
     "three": "^0.185.1"
   },
   "devDependencies": {
     "@gltf-transform/cli": "^4.4.2",
     "@types/chardet": "^1.0.0",
+    "@types/fs-extra": "^11.0.4",
     "@types/iconv-lite": "^0.0.1",
     "@types/inquirer": "^9.0.7",
     "@types/node": "^22.5.5",
